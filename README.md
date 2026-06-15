@@ -1,10 +1,12 @@
 # install-update-launcher
 
-Bibliotheque Bash partagee pour installer et mettre a jour les projets launcher avec le meme comportement.
+**English** | [Français](README.fr.md)
+
+Shared Bash library providing consistent installation and update behavior for launcher projects.
 
 ## Integration
 
-Le projet consommateur charge `install-update-launcher.bash`, renseigne le manifeste puis appelle `iul_install` ou `iul_update`:
+A consuming project loads `install-update-launcher.bash`, defines its manifest, and calls `iul_install` or `iul_update`:
 
 ```bash
 IUL_PACKAGE_NAME="demo-launcher"
@@ -17,16 +19,16 @@ iul_install false
 iul_update false
 ```
 
-La bibliotheque gere les destinations utilisateur et systeme, la copie des modules, la completion Bash, le `PATH` pour POSIX/Bash/Fish et les mises a jour selectives par SHA-256.
+The library manages user and system destinations, module copying, Bash completion, `PATH` setup for POSIX/Bash/Fish, and selective SHA-256 updates.
 
-## Installation de la bibliotheque
+## Library installation
 
 ```bash
 ./install-update-launcher --install
 ./install-update-launcher --update
 ```
 
-Les launchers peuvent aussi charger la bibliotheque directement depuis un depot frere ou via `INSTALL_UPDATE_LAUNCHER_LIB=/chemin/install-update-launcher.bash`.
+Launchers can load the library directly from a sibling repository or through `INSTALL_UPDATE_LAUNCHER_LIB=/path/to/install-update-launcher.bash`.
 
 ## Tests
 
