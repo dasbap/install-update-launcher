@@ -24,6 +24,7 @@ IUL_COMMAND_NAME="install-update-launcher"
 IUL_COMMAND_SOURCE="$SCRIPT_DIR/install-update-launcher"
 IUL_MODULE_SOURCE_DIR="$SCRIPT_DIR/lib/install-update-launcher"
 IUL_COMPLETION_SOURCE=""
+IUL_CONFIG_DIR_FALLBACK=""
 if [[ -f "$SCRIPT_DIR/deploy/manifest" ]]; then
   IUL_MANIFEST_SOURCE="$SCRIPT_DIR/deploy/manifest"
 else

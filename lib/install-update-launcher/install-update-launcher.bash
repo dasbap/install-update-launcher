@@ -56,7 +56,7 @@ iul_read_manifest() {
   IUL_TARGET_CONFIG_SCHEMA="0"
   IUL_TARGET_CONFIG_MIN="0"
   IUL_TARGET_CONFIG_MAX="0"
-  IUL_TARGET_CONFIG_DIR=""
+  IUL_TARGET_CONFIG_DIR="${IUL_CONFIG_DIR_FALLBACK:-}"
   [[ -f "$manifest" ]] || return 0
   while IFS= read -r line; do
     [[ -z "$line" || "$line" == \#* || "$line" != *=* ]] && continue
