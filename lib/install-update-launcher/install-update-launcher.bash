@@ -97,7 +97,8 @@ iul_copy_modules() {
     [[ -e "$module" ]] || continue
     cp "$module" "$destination/"
   done
-  if [[ ! -e "$destination/install-update-launcher.bash" || ! "$IUL_LIBRARY_FILE" -ef "$destination/install-update-launcher.bash" ]]; then
+  if [[ ! -f "$IUL_MODULE_SOURCE_DIR/install-update-launcher.bash" ]] && \
+     { [[ ! -e "$destination/install-update-launcher.bash" ]] || ! "$IUL_LIBRARY_FILE" -ef "$destination/install-update-launcher.bash"; }; then
     cp "$IUL_LIBRARY_FILE" "$destination/install-update-launcher.bash"
   fi
 }
@@ -151,7 +152,9 @@ iul_update() {
     module_name="$(basename "$module")"
     iul_copy_if_changed "$module" "$IUL_LIB_DEST/$module_name" "module $module_name" && changed=true || true
   done
-  iul_copy_if_changed "$IUL_LIBRARY_FILE" "$IUL_LIB_DEST/install-update-launcher.bash" "shared installer library" && changed=true || true
+  if [[ ! -f "$IUL_MODULE_SOURCE_DIR/install-update-launcher.bash" ]]; then
+    iul_copy_if_changed "$IUL_LIBRARY_FILE" "$IUL_LIB_DEST/install-update-launcher.bash" "shared installer library" && changed=true || true
+  fi
   if [[ -n "${IUL_COMPLETION_SOURCE:-}" ]]; then
     iul_copy_if_changed "$IUL_COMPLETION_SOURCE" "$IUL_COMPLETION_DEST/$IUL_COMMAND_NAME" "Bash completion $IUL_COMPLETION_DEST/$IUL_COMMAND_NAME" && changed=true || true
   fi
@@ -161,4 +164,40 @@ iul_update() {
   else
     echo "$IUL_PACKAGE_NAME update complete"
   fi
+}
+
+iul_apply_from_git() {
+  local action="$1" system="$2" repository="$3" ref="$4" package_name="$5"
+  local command_name="$6" command_path="$7" modules_path="$8" completion_path="${9:-}"
+  local checkout
+
+  command -v git >/dev/null 2>&1 || {
+    echo "Error: git is required to download $package_name" >&2
+    return 1
+  }
+  checkout="$(mktemp -d)"
+  if ! git clone --quiet --depth 1 --branch "$ref" "$repository" "$checkout"; then
+    rm -rf "$checkout"
+    echo "Error: unable to download $package_name from $repository ($ref)" >&2
+    return 1
+  fi
+
+  IUL_PACKAGE_NAME="$package_name"
+  IUL_COMMAND_NAME="$command_name"
+  IUL_COMMAND_SOURCE="$checkout/$command_path"
+  IUL_MODULE_SOURCE_DIR="$checkout/$modules_path"
+  if [[ -n "$completion_path" ]]; then
+    IUL_COMPLETION_SOURCE="$checkout/$completion_path"
+  else
+    IUL_COMPLETION_SOURCE=""
+  fi
+
+  local status=0
+  case "$action" in
+    install) iul_install "$system" || status=$? ;;
+    update) iul_update "$system" || status=$? ;;
+    *) status=1; echo "Error: unsupported repository action: $action" >&2 ;;
+  esac
+  rm -rf "$checkout"
+  return "$status"
 }

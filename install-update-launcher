@@ -24,10 +24,17 @@ IUL_COMMAND_NAME="install-update-launcher"
 IUL_COMMAND_SOURCE="$SCRIPT_DIR/install-update-launcher"
 IUL_MODULE_SOURCE_DIR="$SCRIPT_DIR/lib/install-update-launcher"
 IUL_COMPLETION_SOURCE=""
+IUL_REPOSITORY="${INSTALL_UPDATE_LAUNCHER_REPOSITORY:-https://github.com/dasbap/install-update-launcher.git}"
+IUL_REF="${INSTALL_UPDATE_LAUNCHER_REF:-main}"
 
 case "${1:-}" in
   --install|-i) [[ "${2:-}" == --system ]] && iul_install true || iul_install false ;;
-  --update) [[ "${2:-}" == --system ]] && iul_update true || iul_update false ;;
+  --update)
+    system=false; [[ "${2:-}" == --system ]] && system=true
+    iul_apply_from_git update "$system" "$IUL_REPOSITORY" "$IUL_REF" \
+      install-update-launcher install-update-launcher install-update-launcher \
+      lib/install-update-launcher ""
+    ;;
   --help|-h|"")
     printf 'Usage: install-update-launcher --install [--system] | --update [--system]\n'
     ;;

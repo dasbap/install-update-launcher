@@ -4,6 +4,8 @@
 
 Shared Bash library providing consistent installation and update behavior for launcher projects.
 
+This package installs and updates only itself. Installing multiple launcher projects is the responsibility of `uni-launcher`.
+
 ## Integration
 
 A consuming project loads `install-update-launcher.bash`, defines its manifest, and calls `iul_install` or `iul_update`:
@@ -21,12 +23,16 @@ iul_update false
 
 The library manages user and system destinations, module copying, Bash completion, `PATH` setup for POSIX/Bash/Fish, and selective SHA-256 updates.
 
+`iul_apply_from_git` downloads a package repository and applies an install or update from an explicit branch. This is the API used by `uni` to manage optional packages.
+
 ## Library installation
 
 ```bash
 ./install-update-launcher --install
 ./install-update-launcher --update
 ```
+
+`--update` downloads `https://github.com/dasbap/install-update-launcher.git` from `main`. Set `INSTALL_UPDATE_LAUNCHER_REPOSITORY` or `INSTALL_UPDATE_LAUNCHER_REF` to select another source.
 
 Launchers can load the library directly from a sibling repository or through `INSTALL_UPDATE_LAUNCHER_LIB=/path/to/install-update-launcher.bash`.
 

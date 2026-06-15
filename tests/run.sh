@@ -61,6 +61,41 @@ iul_install false >/dev/null
 [[ "$(grep -Fc '# >>> launcher tools PATH >>>' "$HOME/.profile")" -eq 1 ]]
 [[ "$(grep -Fc '# >>> launcher tools PATH >>>' "$HOME/.config/fish/config.fish")" -eq 1 ]]
 
+REMOTE="$TMP/remote"
+mkdir -p "$REMOTE/lib/remote-demo" "$REMOTE/completions"
+cp "$TMP/package/demo" "$REMOTE/remote-demo"
+cp "$TMP/package/lib/demo/core.bash" "$REMOTE/lib/remote-demo/core.bash"
+cp "$TMP/package/completions/demo.bash" "$REMOTE/completions/remote-demo.bash"
+git -C "$REMOTE" init -q
+git -C "$REMOTE" config user.name test
+git -C "$REMOTE" config user.email test@example.invalid
+git -C "$REMOTE" add -A
+git -C "$REMOTE" commit -qm initial
+git -C "$REMOTE" branch -M main
+
+iul_apply_from_git install false "file://$REMOTE" main remote-demo remote-demo \
+  remote-demo lib/remote-demo completions/remote-demo.bash >/dev/null
+[[ -x "$HOME/.local/bin/remote-demo" ]]
+[[ -f "$HOME/.local/lib/remote-demo/core.bash" ]]
+
+SELF_REMOTE="$TMP/self-remote"
+mkdir -p "$SELF_REMOTE/lib/install-update-launcher"
+cp "$ROOT/install-update-launcher" "$SELF_REMOTE/install-update-launcher"
+cp "$ROOT/lib/install-update-launcher/install-update-launcher.bash" \
+  "$SELF_REMOTE/lib/install-update-launcher/install-update-launcher.bash"
+printf '\nIUL_REMOTE_TEST=true\n' >> "$SELF_REMOTE/lib/install-update-launcher/install-update-launcher.bash"
+git -C "$SELF_REMOTE" init -q
+git -C "$SELF_REMOTE" config user.name test
+git -C "$SELF_REMOTE" config user.email test@example.invalid
+git -C "$SELF_REMOTE" add -A
+git -C "$SELF_REMOTE" commit -qm initial
+git -C "$SELF_REMOTE" branch -M main
+
+"$ROOT/install-update-launcher" --install >/dev/null
+INSTALL_UPDATE_LAUNCHER_REPOSITORY="file://$SELF_REMOTE" \
+  "$HOME/.local/bin/install-update-launcher" --update >/dev/null
+grep -Fq 'IUL_REMOTE_TEST=true' "$HOME/.local/lib/install-update-launcher/install-update-launcher.bash"
+
 bash -n "$ROOT/install-update-launcher" "$ROOT/lib/install-update-launcher/install-update-launcher.bash" "$ROOT/tests/run.sh"
 "$ROOT/install-update-launcher" --help >/dev/null
 echo "All tests passed."
