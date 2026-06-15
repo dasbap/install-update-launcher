@@ -25,6 +25,8 @@ La bibliothèque gère les destinations utilisateur et système, la copie des mo
 
 `iul_apply_from_git` télécharge le dépôt d'un paquet et applique une installation ou une mise à jour depuis une branche explicite. Cette API est utilisée par `uni` pour gérer les paquets optionnels.
 
+`iul_package_status_from_git` compare un paquet distant avec son installation et retourne `not-installed`, `up-to-date`, `update-available` ou `unavailable`.
+
 ## Installation de la bibliothèque
 
 ```bash

@@ -210,3 +210,50 @@ iul_apply_from_git() {
   rm -rf "$checkout"
   return "$status"
 }
+
+iul_package_status_from_git() {
+  local system="$1" repository="$2" ref="$3" package_name="$4"
+  local command_name="$5" command_path="$6" modules_path="$7" completion_path="${8:-}"
+  local checkout module module_name status="up-to-date"
+
+  command -v git >/dev/null 2>&1 || {
+    printf 'unavailable\n'
+    return 0
+  }
+  checkout="$(mktemp -d)"
+  if ! git clone --quiet --depth 1 --branch "$ref" "$repository" "$checkout"; then
+    rm -rf "$checkout"
+    printf 'unavailable\n'
+    return 0
+  fi
+
+  IUL_PACKAGE_NAME="$package_name"
+  IUL_COMMAND_NAME="$command_name"
+  iul_read_paths "$system"
+  if [[ ! -x "$IUL_BIN_DEST/$command_name" ]]; then
+    rm -rf "$checkout"
+    printf 'not-installed\n'
+    return 0
+  fi
+
+  if [[ "$(iul_hash_file "$checkout/$command_path")" != "$(iul_hash_file "$IUL_BIN_DEST/$command_name")" ]]; then
+    status="update-available"
+  fi
+  for module in "$checkout/$modules_path"/*.bash; do
+    [[ -e "$module" ]] || continue
+    module_name="$(basename "$module")"
+    if [[ ! -f "$IUL_LIB_DEST/$module_name" ]] || \
+       [[ "$(iul_hash_file "$module")" != "$(iul_hash_file "$IUL_LIB_DEST/$module_name")" ]]; then
+      status="update-available"
+      break
+    fi
+  done
+  if [[ -n "$completion_path" ]] && \
+     { [[ ! -f "$IUL_COMPLETION_DEST/$command_name" ]] || \
+       [[ "$(iul_hash_file "$checkout/$completion_path")" != "$(iul_hash_file "$IUL_COMPLETION_DEST/$command_name")" ]]; }; then
+    status="update-available"
+  fi
+
+  rm -rf "$checkout"
+  printf '%s\n' "$status"
+}

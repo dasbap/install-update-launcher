@@ -85,6 +85,14 @@ iul_apply_from_git install false "file://$REMOTE" main remote-demo remote-demo \
   remote-demo lib/remote-demo completions/remote-demo.bash >/dev/null
 [[ -x "$HOME/.local/bin/remote-demo" ]]
 [[ -f "$HOME/.local/lib/remote-demo/core.bash" ]]
+[[ "$(iul_package_status_from_git false "file://$REMOTE" release remote-demo remote-demo \
+  remote-demo lib/remote-demo completions/remote-demo.bash)" == up-to-date ]]
+printf '\nchanged-installed=true\n' >> "$HOME/.local/lib/remote-demo/core.bash"
+[[ "$(iul_package_status_from_git false "file://$REMOTE" release remote-demo remote-demo \
+  remote-demo lib/remote-demo completions/remote-demo.bash)" == update-available ]]
+rm -f "$HOME/.local/bin/remote-demo"
+[[ "$(iul_package_status_from_git false "file://$REMOTE" release remote-demo remote-demo \
+  remote-demo lib/remote-demo completions/remote-demo.bash)" == not-installed ]]
 
 SELF_REMOTE="$TMP/self-remote"
 mkdir -p "$SELF_REMOTE/lib/install-update-launcher"
