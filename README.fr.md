@@ -32,7 +32,26 @@ La bibliothèque gère les destinations utilisateur et système, la copie des mo
 ./install-update-launcher --update
 ```
 
-`--update` télécharge la branche `main` de `https://github.com/dasbap/install-update-launcher.git`. Définissez `INSTALL_UPDATE_LAUNCHER_REPOSITORY` ou `INSTALL_UPDATE_LAUNCHER_REF` pour sélectionner une autre source.
+## Canaux de déploiement
+
+Tous les dépôts launcher utilisent le même modèle de branches :
+
+| Canal | Branche | Utilisation |
+| --- | --- | --- |
+| `stable` | `release` | commandes prêtes pour la production |
+| `prerelease` | `pre-release` | versions candidates et validation utilisateur |
+| `development` | `main` | intégration active et développement |
+
+```bash
+install-update-launcher --update --channel stable
+install-update-launcher --update --channel prerelease
+install-update-launcher --update --channel development
+install-update-launcher --update --ref v1.2.0
+```
+
+Le canal par défaut est `stable`. `--ref` remplace le canal et accepte une branche ou un tag Git. `--update` télécharge `https://github.com/dasbap/install-update-launcher.git`; utilisez `INSTALL_UPDATE_LAUNCHER_REPOSITORY` pour sélectionner un autre dépôt.
+
+Les changements sont développés sur `main`, promus vers `pre-release` après validation des tests, puis vers `release` après validation de la version candidate. Les versions stables utilisent les tags `vMAJOR.MINOR.PATCH`; les préversions utilisent `vMAJOR.MINOR.PATCH-rc.N`.
 
 Les launchers peuvent charger la bibliothèque directement depuis un dépôt voisin ou avec `INSTALL_UPDATE_LAUNCHER_LIB=/path/to/install-update-launcher.bash`.
 

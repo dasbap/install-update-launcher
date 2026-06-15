@@ -32,7 +32,26 @@ The library manages user and system destinations, module copying, Bash completio
 ./install-update-launcher --update
 ```
 
-`--update` downloads `https://github.com/dasbap/install-update-launcher.git` from `main`. Set `INSTALL_UPDATE_LAUNCHER_REPOSITORY` or `INSTALL_UPDATE_LAUNCHER_REF` to select another source.
+## Deployment channels
+
+All launcher repositories use the same branch model:
+
+| Channel | Branch | Purpose |
+| --- | --- | --- |
+| `stable` | `release` | production-ready commands |
+| `prerelease` | `pre-release` | release candidates and user validation |
+| `development` | `main` | active integration and development |
+
+```bash
+install-update-launcher --update --channel stable
+install-update-launcher --update --channel prerelease
+install-update-launcher --update --channel development
+install-update-launcher --update --ref v1.2.0
+```
+
+The default channel is `stable`. `--ref` overrides the channel and accepts any Git branch or tag. `--update` downloads `https://github.com/dasbap/install-update-launcher.git`; set `INSTALL_UPDATE_LAUNCHER_REPOSITORY` to select another repository.
+
+Changes are developed on `main`, promoted to `pre-release` after tests pass, then promoted to `release` after release-candidate validation. Stable releases are tagged as `vMAJOR.MINOR.PATCH`; prereleases use `vMAJOR.MINOR.PATCH-rc.N`.
 
 Launchers can load the library directly from a sibling repository or through `INSTALL_UPDATE_LAUNCHER_LIB=/path/to/install-update-launcher.bash`.
 

@@ -2,6 +2,15 @@
 
 IUL_LIBRARY_FILE="${BASH_SOURCE[0]}"
 
+iul_channel_ref() {
+  case "$1" in
+    stable) printf 'release\n' ;;
+    prerelease) printf 'pre-release\n' ;;
+    development) printf 'main\n' ;;
+    *) echo "Error: unknown deployment channel: $1" >&2; return 2 ;;
+  esac
+}
+
 iul_require_manifest() {
   local variable
   for variable in IUL_PACKAGE_NAME IUL_COMMAND_NAME IUL_COMMAND_SOURCE IUL_MODULE_SOURCE_DIR; do

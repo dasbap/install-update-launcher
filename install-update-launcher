@@ -25,18 +25,34 @@ IUL_COMMAND_SOURCE="$SCRIPT_DIR/install-update-launcher"
 IUL_MODULE_SOURCE_DIR="$SCRIPT_DIR/lib/install-update-launcher"
 IUL_COMPLETION_SOURCE=""
 IUL_REPOSITORY="${INSTALL_UPDATE_LAUNCHER_REPOSITORY:-https://github.com/dasbap/install-update-launcher.git}"
-IUL_REF="${INSTALL_UPDATE_LAUNCHER_REF:-main}"
+IUL_CHANNEL="${INSTALL_UPDATE_LAUNCHER_CHANNEL:-stable}"
+IUL_REF="${INSTALL_UPDATE_LAUNCHER_REF:-}"
+
+parse_deployment_options() {
+  local option
+  system=false
+  while [[ $# -gt 0 ]]; do
+    option="$1"; shift
+    case "$option" in
+      --system) system=true ;;
+      --channel) [[ $# -gt 0 ]] || { echo "Error: --channel requires a value" >&2; exit 2; }; IUL_CHANNEL="$1"; shift ;;
+      --ref) [[ $# -gt 0 ]] || { echo "Error: --ref requires a value" >&2; exit 2; }; IUL_REF="$1"; shift ;;
+      *) echo "Error: unknown deployment option: $option" >&2; exit 2 ;;
+    esac
+  done
+  [[ -n "$IUL_REF" ]] || IUL_REF="$(iul_channel_ref "$IUL_CHANNEL")"
+}
 
 case "${1:-}" in
-  --install|-i) [[ "${2:-}" == --system ]] && iul_install true || iul_install false ;;
+  --install|-i) shift; parse_deployment_options "$@"; iul_install "$system" ;;
   --update)
-    system=false; [[ "${2:-}" == --system ]] && system=true
+    shift; parse_deployment_options "$@"
     iul_apply_from_git update "$system" "$IUL_REPOSITORY" "$IUL_REF" \
       install-update-launcher install-update-launcher install-update-launcher \
       lib/install-update-launcher ""
     ;;
   --help|-h|"")
-    printf 'Usage: install-update-launcher --install [--system] | --update [--system]\n'
+    printf 'Usage: install-update-launcher --install|--update [--system] [--channel stable|prerelease|development] [--ref git-ref]\n'
     ;;
   *) echo "Erreur: option inconnue: $1" >&2; exit 1 ;;
 esac

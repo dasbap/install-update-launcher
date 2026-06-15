@@ -19,6 +19,12 @@ EOF
 chmod +x "$TMP/package/demo"
 
 source "$ROOT/lib/install-update-launcher/install-update-launcher.bash"
+[[ "$(iul_channel_ref stable)" == release ]]
+[[ "$(iul_channel_ref prerelease)" == pre-release ]]
+[[ "$(iul_channel_ref development)" == main ]]
+if iul_channel_ref invalid >/dev/null 2>&1; then
+  fail "invalid deployment channel should fail"
+fi
 IUL_PACKAGE_NAME=demo-launcher
 IUL_COMMAND_NAME=demo
 IUL_COMMAND_SOURCE="$TMP/package/demo"
@@ -72,6 +78,8 @@ git -C "$REMOTE" config user.email test@example.invalid
 git -C "$REMOTE" add -A
 git -C "$REMOTE" commit -qm initial
 git -C "$REMOTE" branch -M main
+git -C "$REMOTE" branch release
+git -C "$REMOTE" branch pre-release
 
 iul_apply_from_git install false "file://$REMOTE" main remote-demo remote-demo \
   remote-demo lib/remote-demo completions/remote-demo.bash >/dev/null
@@ -90,6 +98,8 @@ git -C "$SELF_REMOTE" config user.email test@example.invalid
 git -C "$SELF_REMOTE" add -A
 git -C "$SELF_REMOTE" commit -qm initial
 git -C "$SELF_REMOTE" branch -M main
+git -C "$SELF_REMOTE" branch release
+git -C "$SELF_REMOTE" branch pre-release
 
 "$ROOT/install-update-launcher" --install >/dev/null
 INSTALL_UPDATE_LAUNCHER_REPOSITORY="file://$SELF_REMOTE" \
