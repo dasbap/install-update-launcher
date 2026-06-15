@@ -27,6 +27,20 @@ The library manages user and system destinations, module copying, Bash completio
 
 `iul_package_status_from_git` compares a remote package with its installation and returns `not-installed`, `up-to-date`, `update-available`, or `unavailable`.
 
+## Configuration safety
+
+Packages declare `version`, `config_schema`, `config_min`, `config_max`, and `config_dir` in `deploy/manifest`. The updater records installed metadata under `~/.local/state/launcher-tools/packages`.
+
+Schema changes create persistent backups under `~/.local/state/launcher-tools/backups/<command>/`. Incompatible transitions stop after backup unless the target provides `deploy/migrate-config` and the caller uses `--merge-config`, or the caller explicitly uses `--force-config`.
+
+```bash
+install-update-launcher --update --ref v1.0.0
+install-update-launcher --update --merge-config
+install-update-launcher --update --force-config
+```
+
+The migration hook receives: backup configuration path, active configuration path, source schema, and target schema.
+
 ## Library installation
 
 ```bash

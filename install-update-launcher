@@ -24,6 +24,11 @@ IUL_COMMAND_NAME="install-update-launcher"
 IUL_COMMAND_SOURCE="$SCRIPT_DIR/install-update-launcher"
 IUL_MODULE_SOURCE_DIR="$SCRIPT_DIR/lib/install-update-launcher"
 IUL_COMPLETION_SOURCE=""
+if [[ -f "$SCRIPT_DIR/deploy/manifest" ]]; then
+  IUL_MANIFEST_SOURCE="$SCRIPT_DIR/deploy/manifest"
+else
+  IUL_MANIFEST_SOURCE="$(dirname "$LIBRARY")/deploy.manifest"
+fi
 IUL_REPOSITORY="${INSTALL_UPDATE_LAUNCHER_REPOSITORY:-https://github.com/dasbap/install-update-launcher.git}"
 IUL_CHANNEL="${INSTALL_UPDATE_LAUNCHER_CHANNEL:-stable}"
 IUL_REF="${INSTALL_UPDATE_LAUNCHER_REF:-}"
@@ -37,6 +42,8 @@ parse_deployment_options() {
       --system) system=true ;;
       --channel) [[ $# -gt 0 ]] || { echo "Error: --channel requires a value" >&2; exit 2; }; IUL_CHANNEL="$1"; shift ;;
       --ref) [[ $# -gt 0 ]] || { echo "Error: --ref requires a value" >&2; exit 2; }; IUL_REF="$1"; shift ;;
+      --merge-config) IUL_MERGE_CONFIG=true ;;
+      --force-config) IUL_FORCE_CONFIG=true ;;
       *) echo "Error: unknown deployment option: $option" >&2; exit 2 ;;
     esac
   done
@@ -52,7 +59,7 @@ case "${1:-}" in
       lib/install-update-launcher ""
     ;;
   --help|-h|"")
-    printf 'Usage: install-update-launcher --install|--update [--system] [--channel stable|prerelease|development] [--ref git-ref]\n'
+    printf 'Usage: install-update-launcher --install|--update [--system] [--channel stable|prerelease|development] [--ref git-ref] [--merge-config] [--force-config]\n'
     ;;
   *) echo "Erreur: option inconnue: $1" >&2; exit 1 ;;
 esac

@@ -27,6 +27,20 @@ La bibliothèque gère les destinations utilisateur et système, la copie des mo
 
 `iul_package_status_from_git` compare un paquet distant avec son installation et retourne `not-installed`, `up-to-date`, `update-available` ou `unavailable`.
 
+## Sécurité des configurations
+
+Les paquets déclarent `version`, `config_schema`, `config_min`, `config_max` et `config_dir` dans `deploy/manifest`. L'updater enregistre les métadonnées installées dans `~/.local/state/launcher-tools/packages`.
+
+Les changements de schéma créent des sauvegardes persistantes dans `~/.local/state/launcher-tools/backups/<command>/`. Une transition incompatible s'arrête après la sauvegarde, sauf si la cible fournit `deploy/migrate-config` et que l'appel utilise `--merge-config`, ou si l'appel utilise explicitement `--force-config`.
+
+```bash
+install-update-launcher --update --ref v1.0.0
+install-update-launcher --update --merge-config
+install-update-launcher --update --force-config
+```
+
+Le hook de migration reçoit : le chemin de la configuration sauvegardée, le chemin de la configuration active, le schéma source et le schéma cible.
+
 ## Installation de la bibliothèque
 
 ```bash
