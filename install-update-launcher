@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+find_library() {
+  local candidate
+  for candidate in \
+    "${INSTALL_UPDATE_LAUNCHER_LIB:-}" \
+    "$SCRIPT_DIR/lib/install-update-launcher/install-update-launcher.bash" \
+    "$SCRIPT_DIR/../lib/install-update-launcher/install-update-launcher.bash" \
+    "$HOME/.local/lib/install-update-launcher/install-update-launcher.bash" \
+    /usr/local/lib/install-update-launcher/install-update-launcher.bash; do
+    [[ -n "$candidate" && -f "$candidate" ]] && { printf '%s\n' "$candidate"; return 0; }
+  done
+  return 1
+}
+
+LIBRARY="$(find_library)" || { echo "Erreur: bibliotheque install-update-launcher introuvable" >&2; exit 1; }
+source "$LIBRARY"
+
+IUL_PACKAGE_NAME="install-update-launcher"
+IUL_COMMAND_NAME="install-update-launcher"
+IUL_COMMAND_SOURCE="$SCRIPT_DIR/install-update-launcher"
+IUL_MODULE_SOURCE_DIR="$SCRIPT_DIR/lib/install-update-launcher"
+IUL_COMPLETION_SOURCE=""
+
+case "${1:-}" in
+  --install|-i) [[ "${2:-}" == --system ]] && iul_install true || iul_install false ;;
+  --update) [[ "${2:-}" == --system ]] && iul_update true || iul_update false ;;
+  --help|-h|"")
+    printf 'Usage: install-update-launcher --install [--system] | --update [--system]\n'
+    ;;
+  *) echo "Erreur: option inconnue: $1" >&2; exit 1 ;;
+esac
