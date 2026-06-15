@@ -223,11 +223,33 @@ iul_hash_file() {
 iul_copy_if_changed() {
   local source="$1" destination="$2" label="$3"
   if [[ -f "$destination" && "$(iul_hash_file "$source")" == "$(iul_hash_file "$destination")" ]]; then
-    echo "Unchanged $label"
     return 1
   fi
+  if [[ -e "$destination" ]]; then
+    cp "$source" "$destination"
+    echo "Updated $label"
+    return 0
+  fi
   cp "$source" "$destination"
-  echo "Updated $label"
+  echo "Created $label"
+}
+
+iul_delete_obsolete_modules() {
+  local installed_module module_name changed=false
+  for installed_module in "$IUL_LIB_DEST"/*.bash; do
+    [[ -e "$installed_module" ]] || continue
+    module_name="$(basename "$installed_module")"
+    if [[ "$module_name" == install-update-launcher.bash && \
+          ! -f "$IUL_MODULE_SOURCE_DIR/install-update-launcher.bash" ]]; then
+      continue
+    fi
+    if [[ ! -f "$IUL_MODULE_SOURCE_DIR/$module_name" ]]; then
+      rm -f "$installed_module"
+      echo "Deleted module $module_name"
+      changed=true
+    fi
+  done
+  [[ "$changed" == true ]]
 }
 
 iul_copy_modules() {
@@ -310,6 +332,7 @@ iul_update() {
     module_name="$(basename "$module")"
     iul_copy_if_changed "$module" "$IUL_LIB_DEST/$module_name" "module $module_name" && changed=true || true
   done
+  iul_delete_obsolete_modules && changed=true || true
   if [[ -n "${IUL_MANIFEST_SOURCE:-}" && -f "$IUL_MANIFEST_SOURCE" ]]; then
     iul_copy_if_changed "$IUL_MANIFEST_SOURCE" "$IUL_LIB_DEST/deploy.manifest" "deployment manifest" && changed=true || true
   fi
@@ -318,6 +341,10 @@ iul_update() {
   fi
   if [[ -n "${IUL_COMPLETION_SOURCE:-}" ]]; then
     iul_copy_if_changed "$IUL_COMPLETION_SOURCE" "$IUL_COMPLETION_DEST/$IUL_COMMAND_NAME" "Bash completion $IUL_COMPLETION_DEST/$IUL_COMMAND_NAME" && changed=true || true
+  elif [[ -f "$IUL_COMPLETION_DEST/$IUL_COMMAND_NAME" ]]; then
+    rm -f "$IUL_COMPLETION_DEST/$IUL_COMMAND_NAME"
+    echo "Deleted Bash completion $IUL_COMPLETION_DEST/$IUL_COMMAND_NAME"
+    changed=true
   fi
   [[ "$system" == true ]] || iul_configure_user_shells
   if [[ "$changed" == false ]]; then

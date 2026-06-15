@@ -67,7 +67,16 @@ IUL_COMPLETION_SOURCE="$TMP/package/completions/demo.bash"
 printf '\nchanged=true\n' >> "$TMP/package/lib/demo/core.bash"
 output="$(iul_update false)"
 [[ "$output" == *"Updated module core.bash"* ]]
-[[ "$output" == *"Unchanged command"* ]]
+[[ "$output" != *"Unchanged"* ]]
+
+cat > "$TMP/package/lib/demo/new.bash" <<'EOF'
+new_module=true
+EOF
+echo 'obsolete=true' > "$HOME/.local/lib/demo/obsolete.bash"
+output="$(iul_update false)"
+[[ "$output" == *"Created module new.bash"* ]]
+[[ "$output" == *"Deleted module obsolete.bash"* ]]
+[[ "$output" != *"Unchanged"* ]]
 
 IUL_PACKAGE_NAME=second-launcher
 IUL_COMMAND_NAME=second

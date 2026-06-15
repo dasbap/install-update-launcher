@@ -23,6 +23,8 @@ iul_update false
 
 The library manages user and system destinations, module copying, Bash completion, `PATH` setup for POSIX/Bash/Fish, and selective SHA-256 updates.
 
+Update output only reports changed filesystem entries: `Created`, `Updated`, and `Deleted`. Unchanged commands, modules, manifests, and completions remain silent. Modules removed from the source package are deleted from the installation.
+
 `iul_apply_from_git` downloads a package repository and applies an install or update from an explicit branch. This is the API used by `uni` to manage optional packages.
 
 `iul_package_status_from_git` compares a remote package with its installation and returns `not-installed`, `up-to-date`, `update-available`, or `unavailable`.

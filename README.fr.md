@@ -23,6 +23,8 @@ iul_update false
 
 La bibliothèque gère les destinations utilisateur et système, la copie des modules, la complétion Bash, la configuration du `PATH` pour POSIX/Bash/Fish et les mises à jour sélectives par SHA-256.
 
+La sortie de mise à jour affiche uniquement les entrées modifiées : `Created`, `Updated` et `Deleted`. Les commandes, modules, manifestes et complétions inchangés restent silencieux. Les modules supprimés du paquet source sont également supprimés de l'installation.
+
 `iul_apply_from_git` télécharge le dépôt d'un paquet et applique une installation ou une mise à jour depuis une branche explicite. Cette API est utilisée par `uni` pour gérer les paquets optionnels.
 
 `iul_package_status_from_git` compare un paquet distant avec son installation et retourne `not-installed`, `up-to-date`, `update-available` ou `unavailable`.
