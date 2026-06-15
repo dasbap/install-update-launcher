@@ -92,7 +92,8 @@ iul_write_installed_state() {
   state_file="$state_dir/$IUL_COMMAND_NAME.state"
   mkdir -p "$state_dir"
   printf 'version=%s\nconfig_schema=%s\nref=%s\n' \
-    "$IUL_TARGET_VERSION" "$IUL_TARGET_CONFIG_SCHEMA" "${IUL_TARGET_REF:-unknown}" > "$state_file"
+    "$IUL_TARGET_VERSION" "${IUL_RESULT_CONFIG_SCHEMA:-$IUL_TARGET_CONFIG_SCHEMA}" \
+    "${IUL_TARGET_REF:-unknown}" > "$state_file"
 }
 
 iul_config_path() {
@@ -124,6 +125,7 @@ iul_prepare_config_transition() {
   local system="$1" checkout="$2" state_file config_path migration_hook
   local incompatible=false schema_changed=false
   IUL_LAST_CONFIG_BACKUP=""
+  IUL_RESULT_CONFIG_SCHEMA="$IUL_TARGET_CONFIG_SCHEMA"
   state_file="$(iul_state_dir "$system")/packages/$IUL_COMMAND_NAME.state"
   iul_read_paths "$system"
   if [[ ! -x "$IUL_BIN_DEST/$IUL_COMMAND_NAME" ]]; then
@@ -136,6 +138,7 @@ iul_prepare_config_transition() {
     IUL_INSTALLED_VERSION="legacy"
     IUL_INSTALLED_CONFIG_SCHEMA="$IUL_TARGET_CONFIG_SCHEMA"
   fi
+  IUL_RESULT_CONFIG_SCHEMA="$IUL_INSTALLED_CONFIG_SCHEMA"
   [[ "$IUL_INSTALLED_CONFIG_SCHEMA" == "$IUL_TARGET_CONFIG_SCHEMA" ]] || schema_changed=true
   if (( IUL_INSTALLED_CONFIG_SCHEMA < IUL_TARGET_CONFIG_MIN || IUL_INSTALLED_CONFIG_SCHEMA > IUL_TARGET_CONFIG_MAX )); then
     incompatible=true
@@ -150,6 +153,7 @@ iul_prepare_config_transition() {
     if [[ -x "$migration_hook" ]]; then
       "$migration_hook" "$IUL_LAST_CONFIG_BACKUP/config" "$config_path" \
         "$IUL_INSTALLED_CONFIG_SCHEMA" "$IUL_TARGET_CONFIG_SCHEMA"
+      IUL_RESULT_CONFIG_SCHEMA="$IUL_TARGET_CONFIG_SCHEMA"
       echo "Merged $IUL_PACKAGE_NAME configuration with deploy/migrate-config"
     else
       echo "Error: --merge-config requested but $IUL_PACKAGE_NAME provides no deploy/migrate-config hook" >&2
@@ -272,6 +276,7 @@ iul_install() {
   [[ "$system" == true ]] || iul_configure_user_shells
   if [[ -n "${IUL_MANIFEST_SOURCE:-}" ]]; then
     iul_read_manifest "$IUL_MANIFEST_SOURCE"
+    IUL_RESULT_CONFIG_SCHEMA="$IUL_TARGET_CONFIG_SCHEMA"
     IUL_TARGET_REF="${IUL_TARGET_REF:-local}"
     iul_write_installed_state "$system"
   fi
@@ -280,6 +285,14 @@ iul_install() {
   if [[ -n "${IUL_COMPLETION_SOURCE:-}" ]]; then
     echo "Installed $IUL_PACKAGE_NAME Bash completion to $IUL_COMPLETION_DEST/$IUL_COMMAND_NAME"
   fi
+}
+
+iul_clone_ref() {
+  local repository="$1" ref="$2" checkout="$3"
+  git init -q "$checkout" || return 1
+  git -C "$checkout" remote add origin "$repository" || return 1
+  git -C "$checkout" fetch --quiet --depth 1 origin "$ref" || return 1
+  git -C "$checkout" -c advice.detachedHead=false checkout --quiet --detach FETCH_HEAD || return 1
 }
 
 iul_update() {
@@ -324,7 +337,7 @@ iul_apply_from_git() {
     return 1
   }
   checkout="$(mktemp -d)"
-  if ! git clone --quiet --depth 1 --branch "$ref" "$repository" "$checkout"; then
+  if ! iul_clone_ref "$repository" "$ref" "$checkout"; then
     rm -rf "$checkout"
     echo "Error: unable to download $package_name from $repository ($ref)" >&2
     return 1
@@ -371,7 +384,7 @@ iul_package_status_from_git() {
     return 0
   }
   checkout="$(mktemp -d)"
-  if ! git clone --quiet --depth 1 --branch "$ref" "$repository" "$checkout"; then
+  if ! iul_clone_ref "$repository" "$ref" "$checkout"; then
     rm -rf "$checkout"
     printf 'unavailable\n'
     return 0

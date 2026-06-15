@@ -157,7 +157,7 @@ fi
 IUL_FORCE_CONFIG=true
 iul_apply_from_git update false "file://$REMOTE" release remote-demo remote-demo \
   remote-demo lib/remote-demo completions/remote-demo.bash >/dev/null
-grep -Fq 'config_schema=1' "$HOME/.local/state/launcher-tools/packages/remote-demo.state"
+grep -Fq 'config_schema=2' "$HOME/.local/state/launcher-tools/packages/remote-demo.state"
 IUL_FORCE_CONFIG=false
 
 SELF_REMOTE="$TMP/self-remote"
